@@ -6,24 +6,23 @@ package com.rosinante24.firebasechatapp;
 
 public class ModelMessages {
 
-
     private String id;
     private String text;
     private String name;
     private String photoUrl;
     private String imageUrl;
 
-    public ModelMessages(String id, String text, String name, String photoUrl) {
-        this.id = id;
+    public ModelMessages() {
+
+    }
+
+    public ModelMessages(String text, String name, String photoUrl, String imageUrl) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
         this.imageUrl = imageUrl;
     }
 
-    public ModelMessages(){
-
-    }
 
 
     public String getId() {

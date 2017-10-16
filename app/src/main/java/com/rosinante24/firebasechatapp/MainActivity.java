@@ -29,18 +29,24 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.appinvite.AppInviteInvitation;
@@ -74,6 +80,9 @@ import com.google.firebase.storage.UploadTask;
 import java.util.HashMap;
 import java.util.Map;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements
@@ -90,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements
             messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
             messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
             messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messagerImageView);
+            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
         }
     }
 
@@ -112,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private FirebaseRecyclerAdapter<ModelMessages, MessageViewHolder> mFirebaseAdapter;
-    private ProgressBar mProgressBar;
+//    private ProgressBar mProgressBar;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
@@ -152,33 +161,45 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
                 .build();
 
-        mProgressBar = (ProgressBar) findViewById(R.id.progressBarMessage);
+//        mProgressBar = (ProgressBar) findViewById(R.id.progressBarMessage);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<ModelMessages, MessageViewHolder>(
-                ModelMessages.class,
-                R.layout.item_message,
-                MessageViewHolder.class,
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD)) {
 
+        SnapshotParser<ModelMessages> parser = new SnapshotParser<ModelMessages>() {
             @Override
-            protected ModelMessages parseSnapshot(DataSnapshot snapshot) {
-                ModelMessages friendlyMessage = super.parseSnapshot(snapshot);
+            public ModelMessages parseSnapshot(DataSnapshot dataSnapshot) {
+                ModelMessages friendlyMessage = dataSnapshot.getValue(ModelMessages.class);
                 if (friendlyMessage != null) {
-                    friendlyMessage.setId(snapshot.getKey());
+                    friendlyMessage.setId(dataSnapshot.getKey());
                 }
                 return friendlyMessage;
             }
+        };
 
+        DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
 
+        FirebaseRecyclerOptions<ModelMessages> options =
+                new FirebaseRecyclerOptions.Builder<ModelMessages>()
+                        .setQuery(messagesRef, parser)
+                        .build();
+
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<ModelMessages, MessageViewHolder>(options) {
 
             @Override
-            protected void populateViewHolder(final MessageViewHolder viewHolder,
-                                              ModelMessages friendlyMessage, int position) {
-                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+                LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+                return new MessageViewHolder(inflater.inflate(R.layout.item_message, viewGroup, false));
+            }
+
+            @Override
+            protected void onBindViewHolder(final MessageViewHolder viewHolder,
+                                            int position,
+                                            ModelMessages friendlyMessage) {
+
+//                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (friendlyMessage.getText() != null) {
                     viewHolder.messageTextView.setText(friendlyMessage.getText());
                     viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
@@ -392,7 +413,7 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             case R.id.crash_menu:
                 FirebaseCrash.logcat(Log.ERROR, TAG, "crash caused");
-                causeCrash ();
+                causeCrash();
                 return true;
             case R.id.sign_out_menu:
                 mFirebaseAuth.signOut();
