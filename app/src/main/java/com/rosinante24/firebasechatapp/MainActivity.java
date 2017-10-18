@@ -97,10 +97,10 @@ public class MainActivity extends AppCompatActivity implements
 
         public MessageViewHolder(View v) {
             super(v);
-            messageTextView = (TextView) v.findViewById(R.id.messageTextView);
-            messageImageView = (ImageView) v.findViewById(R.id.messageImageView);
-            messengerTextView = (TextView) v.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) v.findViewById(R.id.messengerImageView);
+            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
+            messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
+            messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
+            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
         }
     }
 
