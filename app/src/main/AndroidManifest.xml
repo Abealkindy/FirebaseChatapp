@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.rosinante24.firebasechatapp">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,29 +11,24 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity android:name=".MainActivity">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
-
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="friendlychat.firebase.google.com"
-                    android:pathPrefix="/message"
-                    android:scheme="http" />
+                    android:host="belajar-firebase-eb5e4.firebaseio.com"
+                    android:pathPrefix="/messages"
+                    android:scheme="https" />
 
             </intent-filter>
-
         </activity>
         <activity
             android:name=".SignInActivity"
@@ -44,7 +41,6 @@
                 <action android:name="com.rosinante24.firebasechatapp.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service
             android:name=".MyFirebaseInstanceIdService"
             android:exported="false">

@@ -71,6 +71,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
@@ -96,10 +97,10 @@ public class MainActivity extends AppCompatActivity implements
 
         public MessageViewHolder(View v) {
             super(v);
-            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
-            messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
-            messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
+            messageTextView = (TextView) v.findViewById(R.id.messageTextView);
+            messageImageView = (ImageView) v.findViewById(R.id.messageImageView);
+            messengerTextView = (TextView) v.findViewById(R.id.messengerTextView);
+            messengerImageView = (CircleImageView) v.findViewById(R.id.messengerImageView);
         }
     }
 
@@ -120,8 +121,8 @@ public class MainActivity extends AppCompatActivity implements
     private Button mSendButton;
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
-    private FirebaseRecyclerAdapter<ModelMessages, MessageViewHolder> mFirebaseAdapter;
-//    private ProgressBar mProgressBar;
+    private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
+    private ProgressBar mProgressBar;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
@@ -161,17 +162,17 @@ public class MainActivity extends AppCompatActivity implements
                 .addApi(Auth.GOOGLE_SIGN_IN_API)
                 .build();
 
-//        mProgressBar = (ProgressBar) findViewById(R.id.progressBarMessage);
+        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
 
-        SnapshotParser<ModelMessages> parser = new SnapshotParser<ModelMessages>() {
+        SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
             @Override
-            public ModelMessages parseSnapshot(DataSnapshot dataSnapshot) {
-                ModelMessages friendlyMessage = dataSnapshot.getValue(ModelMessages.class);
+            public FriendlyMessage parseSnapshot(DataSnapshot dataSnapshot) {
+                FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
                 if (friendlyMessage != null) {
                     friendlyMessage.setId(dataSnapshot.getKey());
                 }
@@ -180,26 +181,27 @@ public class MainActivity extends AppCompatActivity implements
         };
 
         DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
+//        Query query = FirebaseDatabase.getInstance().getReference().child(MESSAGES_CHILD);
 
-        FirebaseRecyclerOptions<ModelMessages> options =
-                new FirebaseRecyclerOptions.Builder<ModelMessages>()
+        FirebaseRecyclerOptions<FriendlyMessage> options =
+                new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
                         .setQuery(messagesRef, parser)
                         .build();
 
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<ModelMessages, MessageViewHolder>(options) {
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
 
             @Override
             public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-                LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new MessageViewHolder(inflater.inflate(R.layout.item_message, viewGroup, false));
+                View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_message, viewGroup, false);
+                return new MessageViewHolder(v);
             }
 
             @Override
             protected void onBindViewHolder(final MessageViewHolder viewHolder,
                                             int position,
-                                            ModelMessages friendlyMessage) {
+                                            FriendlyMessage friendlyMessage) {
 
-//                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (friendlyMessage.getText() != null) {
                     viewHolder.messageTextView.setText(friendlyMessage.getText());
                     viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
@@ -303,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
-                .getInt(Preferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
+                .getInt(CodelabPreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -338,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ModelMessages friendlyMessage = new ModelMessages(mMessageEditText.getText().toString(), mUsername,
+                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername,
                         mPhotoUrl, null);
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
                 mMessageEditText.setText("");
@@ -347,14 +349,14 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
-    private Action getMessageViewAction(ModelMessages friendlyMessage) {
+    private Action getMessageViewAction(FriendlyMessage friendlyMessage) {
         return new Action.Builder(Action.Builder.VIEW_ACTION)
                 .setObject(friendlyMessage.getName(), MESSAGE_URL.concat(friendlyMessage.getId()))
                 .setMetadata(new Action.Metadata.Builder().setUpload(false))
                 .build();
     }
 
-    private Indexable getMessageIndexable(ModelMessages friendlyMessage) {
+    private Indexable getMessageIndexable(FriendlyMessage friendlyMessage) {
         PersonBuilder sender = Indexables.personBuilder()
                 .setIsSelf(mUsername.equals(friendlyMessage.getName()))
                 .setName(friendlyMessage.getName())
@@ -482,7 +484,7 @@ public class MainActivity extends AppCompatActivity implements
                     final Uri uri = data.getData();
                     Log.d(TAG, "Uri: " + uri.toString());
 
-                    ModelMessages tempMessage = new ModelMessages(null, mUsername, mPhotoUrl,
+                    FriendlyMessage tempMessage = new FriendlyMessage(null, mUsername, mPhotoUrl,
                             LOADING_IMAGE_URL);
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push()
                             .setValue(tempMessage, new DatabaseReference.CompletionListener() {
@@ -533,8 +535,8 @@ public class MainActivity extends AppCompatActivity implements
                     @Override
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                         if (task.isSuccessful()) {
-                            ModelMessages friendlyMessage =
-                                    new ModelMessages(null, mUsername, mPhotoUrl,
+                            FriendlyMessage friendlyMessage =
+                                    new FriendlyMessage(null, mUsername, mPhotoUrl,
                                             task.getResult().getDownloadUrl()
                                                     .toString());
                             mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key)
@@ -562,4 +564,9 @@ public class MainActivity extends AppCompatActivity implements
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mFirebaseAdapter.startListening();
+    }
 }

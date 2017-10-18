@@ -4,4 +4,6 @@
     <dimen name="marginTextView">40dp</dimen>
     <dimen name="jarak10dp">10dp</dimen>
     <dimen name="jarak36dp">36dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
 </resources>

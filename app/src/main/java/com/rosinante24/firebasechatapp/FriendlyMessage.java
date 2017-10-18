@@ -4,7 +4,7 @@ package com.rosinante24.firebasechatapp;
  * Created by Rosinante24 on 08/10/17.
  */
 
-public class ModelMessages {
+public class FriendlyMessage {
 
     private String id;
     private String text;
@@ -12,18 +12,15 @@ public class ModelMessages {
     private String photoUrl;
     private String imageUrl;
 
-    public ModelMessages() {
-
+    public FriendlyMessage() {
     }
 
-    public ModelMessages(String text, String name, String photoUrl, String imageUrl) {
+    public FriendlyMessage(String text, String name, String photoUrl, String imageUrl) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
         this.imageUrl = imageUrl;
     }
-
-
 
     public String getId() {
         return id;
